@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fair Multiplier Engine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div>
+      <h1>Fair Multiplier</h1>
+      <p>Provably-fair multiplier engine</p>
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      <span>DEMO</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="multiplier-card">
+      <p class="round-label">CURRENT ROUND</p>
+
+      <div id="multiplier">1.00x</div>
+
+      <p id="roundStatus">Ready</p>
+
+      <button id="startBtn">Start Round</button>
+    </section>
+
+    <section class="stats-grid">
+
+      <div class="stat-card">
+        <span>Round</span>
+        <strong id="roundNumber">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Nonce</span>
+        <strong id="nonce">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Last Result</span>
+        <strong id="lastResult">—</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Rounds</span>
+        <strong id="roundCount">0</strong>
+      </div>
+
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Provably Fair</h2>
+        <span>HMAC-SHA256</span>
+      </div>
+
+      <div class="data-row">
+        <span>Server Seed Hash</span>
+        <code id="serverHash">—</code>
+      </div>
+
+      <div class="data-row">
+        <span>Client Seed</span>
+        <code id="clientSeed">—</code>
+      </div>
+
+      <div class="data-row">
+        <span>Nonce</span>
+        <code id="fairNonce">0</code>
+      </div>
+
+      <div class="data-row">
+        <span>HMAC</span>
+        <code id="hmac">—</code>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Round History</h2>
+      </div>
+
+      <div id="history" class="history">
+        <p class="empty">No rounds yet.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Independent provably-fair multiplier simulator
+  </footer>
+
+  <script src="app.js"></script>
+
+</body>
+</html>

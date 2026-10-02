@@ -1,0 +1,148 @@
+const multiplierEl = document.getElementById("multiplier");
+const roundStatusEl = document.getElementById("roundStatus");
+const startBtn = document.getElementById("startBtn");
+
+const roundNumberEl = document.getElementById("roundNumber");
+const nonceEl = document.getElementById("nonce");
+const lastResultEl = document.getElementById("lastResult");
+const roundCountEl = document.getElementById("roundCount");
+
+const serverHashEl = document.getElementById("serverHash");
+const clientSeedEl = document.getElementById("clientSeed");
+const fairNonceEl = document.getElementById("fairNonce");
+const hmacEl = document.getElementById("hmac");
+const historyEl = document.getElementById("history");
+
+let roundNumber = 0;
+let nonce = 0;
+let clientSeed = randomHex(16);
+let serverSeed = randomHex(32);
+let history = [];
+
+clientSeedEl.textContent = clientSeed;
+serverHashEl.textContent = "Generating...";
+
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+
+  return [...new Uint8Array(hash)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function hmacSHA256(key, message) {
+  const keyData = new TextEncoder().encode(key);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    new TextEncoder().encode(message)
+  );
+
+  return [...new Uint8Array(signature)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function randomHex(bytes) {
+  const array = new Uint8Array(bytes);
+  crypto.getRandomValues(array);
+
+  return [...array]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function multiplierFromHash(hash) {
+  const hex = hash.substring(0, 13);
+
+  const number = parseInt(hex, 16);
+  const max = Math.pow(16, 13);
+
+  const u = number / max;
+
+  const houseEdge = 0.03;
+
+  let multiplier = (1 - houseEdge) / (1 - u);
+
+  multiplier = Math.max(1, multiplier);
+
+  return Math.floor(multiplier * 100) / 100;
+}
+
+async function prepareSeed() {
+  const hash = await sha256(serverSeed);
+  serverHashEl.textContent = hash;
+}
+
+async function startRound() {
+  startBtn.disabled = true;
+
+  roundNumber++;
+  nonce++;
+
+  roundNumberEl.textContent = roundNumber;
+  nonceEl.textContent = nonce;
+  fairNonceEl.textContent = nonce;
+
+  roundStatusEl.textContent = "Generating result...";
+
+  multiplierEl.textContent = "1.00x";
+
+  const message = `${clientSeed}:${nonce}`;
+
+  const hmac = await hmacSHA256(serverSeed, message);
+
+  const multiplier = multiplierFromHash(hmac);
+
+  hmacEl.textContent = hmac;
+
+  multiplierEl.textContent = `${multiplier.toFixed(2)}x`;
+  lastResultEl.textContent = `${multiplier.toFixed(2)}x`;
+
+  roundStatusEl.textContent = "Round complete";
+
+  history.unshift({
+    round: roundNumber,
+    multiplier: multiplier
+  });
+
+  updateHistory();
+
+  startBtn.disabled = false;
+  startBtn.textContent = "Next Round";
+}
+
+function updateHistory() {
+  roundCountEl.textContent = history.length;
+
+  historyEl.innerHTML = "";
+
+  history.slice(0, 20).forEach(item => {
+    const row = document.createElement("div");
+
+    row.className = "history-item";
+
+    row.innerHTML = `
+      <span>Round ${item.round}</span>
+      <strong>${item.multiplier.toFixed(2)}x</strong>
+    `;
+
+    historyEl.appendChild(row);
+  });
+}
+
+startBtn.addEventListener("click", startRound);
+window.addEventListener("error", (event) => {
+  alert("Error: " + event.message);
+});
+prepareSeed();
